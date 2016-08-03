@@ -3,8 +3,8 @@ using System.Collections;
 
 public enum PGameType {
 	Start,
-	Run,
-	Stop
+	Intro,
+	Run
 }
 
 public class PrototypeManager : MonoBehaviour {
@@ -17,10 +17,14 @@ public class PrototypeManager : MonoBehaviour {
 	public AudioSource musicSource;
 	public AudioSource questionSource;
 	public AudioSource answerSource;
-	public PrototypeAudioLibrary audioLibrary;
+	public SOAudioBanksClass audioLibrary;
+	public SOQuestionClass[] question;
 
 	int selectedTheme;
 	int selectedSong;
+	int selectedQuestion;
+	float startQuestion;
+	int curQuestion;
 
 	// Use this for initialization
 	void Start () {
@@ -41,7 +45,7 @@ public class PrototypeManager : MonoBehaviour {
 	}
 
 	public void Begin() {
-		gameType = PGameType.Run;
+		gameType = PGameType.Intro;
 		plabel.ChangeLabel (PLabel.None);
 		musicSource.Play ();
 	}
@@ -57,20 +61,49 @@ public class PrototypeManager : MonoBehaviour {
 			plabel.ChangeLabel (PLabel.Perfect);
 			answerSource.Play ();
 			break;
-		case PGameType.Stop:
+		case PGameType.Intro:
 			break;
 		}
 
 	}
 
 	void RandomizeSong() {
+		gameType = PGameType.Run;
 		selectedSong = Random.Range (0,audioLibrary.audioTheme[selectedTheme].segments.Length);
 		musicSource.clip = audioLibrary.audioTheme [selectedTheme].segments[selectedSong];
+		RandomizeQuestion ();
 		musicSource.Play ();
 	}
 
 	void Update() {
-		if ((gameType==PGameType.Run) && (!musicSource.isPlaying))
-			RandomizeSong ();
+		if (gameType == PGameType.Run) {
+			if (!musicSource.isPlaying)
+				RandomizeSong ();
+
+			float curDelta = Time.timeSinceLevelLoad - startQuestion;
+			if (curDelta >= question[selectedTheme].qData [selectedQuestion].length)
+				RandomizeQuestion ();
+			else if ((curQuestion < question[selectedTheme].qData [selectedQuestion].actionTime.Length) && (curDelta >= question[selectedTheme].qData [selectedQuestion].actionTime [curQuestion])) {
+				print ("Tap: "+curDelta+" ["+curQuestion+"/"+question[selectedTheme].qData [selectedQuestion].actionTime.Length+"]");
+				PlayQuestion ();
+			}
+		} else if (gameType == PGameType.Intro) {
+			if (!musicSource.isPlaying)
+				RandomizeSong ();
+		}
+	}
+
+	void RandomizeQuestion() {		
+		startQuestion = Time.timeSinceLevelLoad;
+		curQuestion = 0;
+		selectedQuestion = Random.Range (0,question[selectedTheme].qData.Length);
+		print ("Question Randomized");
+	}
+
+	void PlayQuestion() {
+		curQuestion++;
+		questionSource.Play ();
+		questionHalo.SetTrigger ("Anim");
+
 	}
 }

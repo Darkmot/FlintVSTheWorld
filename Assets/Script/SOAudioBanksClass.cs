@@ -9,10 +9,11 @@ public class AudioTheme {
 	public AudioClip question;
 }
 
-
-public class PrototypeAudioLibrary : MonoBehaviour {
+[CreateAssetMenu(fileName = "SOAudioBanks",menuName = "Prototype/Audio Banks",order = 1)]
+public class SOAudioBanksClass : ScriptableObject {
 
 	public AudioTheme[] audioTheme;
 	public AudioClip answer;
 
 }
+
